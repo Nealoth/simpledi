@@ -5,15 +5,13 @@ import (
 )
 
 var containerInitMutex = sync.Once{}
-var _ = Init()
+var globalContainer IDiContainer
 
-func Init() int {
+func init() {
 	containerInitMutex.Do(func() {
 		globalContainer = &DefaultDiContainer{}
 		globalContainer.Init()
 	})
-
-	return 0
 }
 
 func Register(cmp IComponent) int {
@@ -31,4 +29,8 @@ func GetComponent(component IComponent) (IComponent, bool) {
 
 func Start() {
 	globalContainer.Start()
+}
+
+func Destroy() {
+	globalContainer.Destroy()
 }

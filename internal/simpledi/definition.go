@@ -1,10 +1,9 @@
 package simpledi
 
-type DefinitionRegistryType int
-
-type ComponentDefinition struct {
+type componentDefinition struct {
 	fullName     string
 	initialized  bool
 	rawComponent IComponent
 	dependencies []string
+	injectors    map[string]injectionFunc
 }

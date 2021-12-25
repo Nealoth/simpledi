@@ -3,23 +3,21 @@ package simpledi
 import (
 	"fmt"
 	"github.com/Nealoth/simpledi/pkg/simpledi/reflections"
-	"reflect"
 	"sort"
 )
 
-var globalContainer DiContainer
-
-type definitionsMap map[string]*ComponentDefinition
+type definitionsMap map[string]*componentDefinition
 type componentsMap map[string]IComponent
 
-var _ DiContainer = &DefaultDiContainer{}
+var _ IDiContainer = &DefaultDiContainer{}
 
-type DiContainer interface {
+type IDiContainer interface {
 	Init()
 	RegisterComponent(cmp IComponent)
 	Start()
 	GetComponentByName(name string) (IComponent, bool)
 	GetComponent(component IComponent) (IComponent, bool)
+	Destroy()
 }
 
 type DefaultDiContainer struct {
@@ -55,7 +53,7 @@ func (d *DefaultDiContainer) Start() {
 	d.verifyCircularDependencyInjections()
 
 	// --- PREPARING TO INIT LOOP
-	definitionsList := make([]*ComponentDefinition, 0)
+	definitionsList := make([]*componentDefinition, 0, len(d.definitions))
 
 	for _, definition := range d.definitions {
 		definitionsList = append(definitionsList, definition)
@@ -108,20 +106,20 @@ func (d *DefaultDiContainer) Start() {
 				definition.rawComponent.PreInit()
 
 				// inject stage
-				v := reflect.ValueOf(definition.rawComponent).Elem()
 
-				fields := make([]reflect.Value, 0)
+				for injectorName, injectorFunc := range definition.injectors {
 
-				for i := 0; i < v.NumField(); i++ {
-					fields = append(fields, v.Field(i))
-				}
+					fieldsValues := reflections.
+						GetTypeFieldsValuesByTagValue(definition.rawComponent, injectTagName, injectorName)
 
-				for _, depName := range definition.dependencies {
-					for _, field := range fields {
-						if depName == field.Type().String() {
-							// TODO check exportable and non exportable. For not it will work only for exportable field
-							field.Set(reflect.ValueOf(d.components[depName]))
-						}
+					if err := injectorFunc(definition, fieldsValues, d.components); err != nil {
+						panic(fmt.Sprintf(
+							"%s: injection error occured. component: '%s', injector: '%s', err: %s",
+							errDef,
+							definition.fullName,
+							injectorName,
+							err,
+						))
 					}
 				}
 
@@ -153,6 +151,17 @@ func (d *DefaultDiContainer) Start() {
 		}
 	}
 
+	d.purifyDefinitions()
+}
+
+func (d *DefaultDiContainer) purifyDefinitions() {
+
+	for key, value := range d.definitions {
+		value.rawComponent = nil
+		delete(d.definitions, key)
+	}
+
+	d.definitions = nil
 }
 
 func (d *DefaultDiContainer) Init() {
@@ -176,17 +185,30 @@ func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
 	}
 
 	injectableFields := reflections.GetTypeFieldsByTag(cmp, injectTagName)
-	componentDependencies := make([]string, 0)
+	componentDependencies := make([]string, 0, len(injectableFields))
+	injectorsMap := make(map[string]injectionFunc, 0)
 
 	for _, field := range injectableFields {
 		if reflections.FieldIsPointer(field) {
+			injectionType, _ := field.Tag.Lookup(injectTagName)
+
+			injectorFunction, exist := injectValues[injectionType]
+
+			if !exist {
+				panic(fmt.Sprintf("%s: field '%s' of component '%s' has unknown injection type '%s'",
+					errDef,
+					field.Name+" "+field.Type.String(),
+					componentName,
+					injectionType))
+			}
+
+			injectorsMap[injectionType] = injectorFunction
 			componentDependencies = append(componentDependencies, field.Type.String())
 		} else {
 			panic(fmt.Sprintf("%s: field '%s' of component '%s' should be a pointer",
 				errDef,
 				field.Name+" "+field.Type.String(),
-				componentName,
-			))
+				componentName))
 		}
 	}
 
@@ -196,10 +218,17 @@ func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
 		panic(fmt.Sprintf("%s: component '%s' already exist", errDef, componentName))
 	}
 
-	d.definitions[componentName] = &ComponentDefinition{
+	d.definitions[componentName] = &componentDefinition{
 		fullName:     componentName,
 		rawComponent: cmp,
 		dependencies: componentDependencies,
+		injectors:    injectorsMap,
+	}
+}
+
+func (d *DefaultDiContainer) Destroy() {
+	for _, component := range d.components {
+		component.OnDestroy()
 	}
 }
 
@@ -248,7 +277,7 @@ func (d *DefaultDiContainer) verifyCircularDependencyInjections() {
 		injectedByBuf := make([]string, 0)
 
 		// Add first iteration to buffer
-		for reverseDepName, _ := range injectedBy {
+		for reverseDepName := range injectedBy {
 			injectedByBuf = append(injectedByBuf, reverseDepName)
 		}
 
