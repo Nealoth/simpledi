@@ -1,5 +1,7 @@
 package simpledi
 
+type componentsContainer map[string]IComponent
+
 var _ IComponent = &Component{}
 
 type IComponent interface {

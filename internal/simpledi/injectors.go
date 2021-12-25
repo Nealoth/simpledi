@@ -10,14 +10,14 @@ import (
 
 const funcInjectName = "Inject"
 
-type injectionFunc func(definition *componentDefinition, fields []reflect.Value, components componentsMap) error
+type injectionFunc func(definition *componentDefinition, fields []reflect.Value, components componentsContainer) error
 
 var injectValues = map[string]injectionFunc{
 	"field": fieldInject,
 	"func":  funcInject,
 }
 
-func fieldInject(_ *componentDefinition, fields []reflect.Value, components componentsMap) error {
+func fieldInject(_ *componentDefinition, fields []reflect.Value, components componentsContainer) error {
 
 	for _, f := range fields {
 		if !f.CanSet() {
@@ -29,7 +29,7 @@ func fieldInject(_ *componentDefinition, fields []reflect.Value, components comp
 	return nil
 }
 
-func funcInject(definition *componentDefinition, fields []reflect.Value, components componentsMap) error {
+func funcInject(definition *componentDefinition, fields []reflect.Value, components componentsContainer) error {
 
 	defType := reflect.TypeOf(definition.rawComponent)
 
