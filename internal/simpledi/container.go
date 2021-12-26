@@ -193,27 +193,27 @@ func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
 	injectorsMap := make(map[string]injectionFunc, 0)
 
 	for _, field := range injectableFields {
-		if reflections.FieldIsPointer(field) {
-			injectionType, _ := field.Tag.Lookup(injectTagName)
 
-			injectorFunction, exist := injectValues[injectionType]
+		fieldTypeName := field.Type.String()
 
-			if !exist {
-				panic(fmt.Sprintf("%s: field '%s' of component '%s' has unknown injection type '%s'",
-					errDef,
-					field.Name+" "+field.Type.String(),
-					componentName,
-					injectionType))
-			}
+		if !reflections.FieldIsPointer(field) {
+			fieldTypeName = "*" + fieldTypeName
+		}
 
-			injectorsMap[injectionType] = injectorFunction
-			componentDependencies = append(componentDependencies, field.Type.String())
-		} else {
-			panic(fmt.Sprintf("%s: field '%s' of component '%s' should be a pointer",
+		injectionType, _ := field.Tag.Lookup(injectTagName)
+
+		injectorFunction, exist := injectValues[injectionType]
+
+		if !exist {
+			panic(fmt.Sprintf("%s: field '%s' of component '%s' has unknown injection type '%s'",
 				errDef,
 				field.Name+" "+field.Type.String(),
-				componentName))
+				componentName,
+				injectionType))
 		}
+
+		injectorsMap[injectionType] = injectorFunction
+		componentDependencies = append(componentDependencies, fieldTypeName)
 	}
 
 	_, componentAlreadyExist := d.definitions[componentName]

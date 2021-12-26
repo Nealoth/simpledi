@@ -23,7 +23,12 @@ func fieldInject(_ *componentDefinition, fields []reflect.Value, components comp
 		if !f.CanSet() {
 			return errors.New(fmt.Sprintf("cannot set value to field with type: '%s'", f.Type().String()))
 		}
-		f.Set(reflect.ValueOf(components[f.Type().String()]))
+
+		if f.Kind() == reflect.Ptr {
+			f.Set(reflect.ValueOf(components[f.Type().String()]))
+		} else {
+			f.Set(reflect.ValueOf(components["*"+f.Type().String()]).Elem())
+		}
 	}
 
 	return nil
@@ -59,10 +64,12 @@ func funcInject(definition *componentDefinition, fields []reflect.Value, compone
 	fieldsComparisonMap := make(map[string]bool)
 
 	for _, argType := range funcArgsTypes {
+		// Replace pointers to compare struct and pointer types
 		fieldsComparisonMap[strings.ReplaceAll(argType.String(), "*", "")] = true
 	}
 
 	for _, actualField := range fields {
+		// Replace pointers to compare struct and pointer types
 		delete(fieldsComparisonMap, strings.ReplaceAll(actualField.Type().String(), "*", ""))
 	}
 
@@ -86,13 +93,23 @@ func funcInject(definition *componentDefinition, fields []reflect.Value, compone
 	injectionArgs = append(injectionArgs, reflect.ValueOf(definition.rawComponent))
 
 	for _, argType := range funcArgsTypes {
-		component, found := components[argType.String()]
+		if argType.Kind() == reflect.Ptr {
+			component, found := components[argType.String()]
 
-		if !found {
-			return errors.New(fmt.Sprintf("something went wrong. component '%s' has not found", argType.String()))
+			if !found {
+				return errors.New(fmt.Sprintf("something went wrong. component '%s' has not found", argType.String()))
+			}
+
+			injectionArgs = append(injectionArgs, reflect.ValueOf(component))
+		} else {
+			component, found := components["*"+argType.String()]
+
+			if !found {
+				return errors.New(fmt.Sprintf("something went wrong. component '%s' has not found", argType.String()))
+			}
+
+			injectionArgs = append(injectionArgs, reflect.ValueOf(component).Elem())
 		}
-
-		injectionArgs = append(injectionArgs, reflect.ValueOf(component))
 	}
 
 	injectFunc.Func.Call(injectionArgs)
