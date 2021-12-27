@@ -8,9 +8,13 @@ type IComponent interface {
 	PreInit()
 	PostInit()
 	OnDestroy()
+	AfterContainerStart()
 }
 
 type Component struct {
+}
+
+func (c *Component) AfterContainerStart() {
 }
 
 func (c *Component) PreInit() {
