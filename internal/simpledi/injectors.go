@@ -83,9 +83,10 @@ func funcInject(definition *componentDefinition, fields []reflect.Value, compone
 		}
 
 		return errors.New(
-			fmt.Sprintf("arguments mismatch. '%s' func  args '%s' have not been declared as injectable",
+			fmt.Sprintf("arguments mismatch. '%s' func  arg(s) '%s' have not been declared as injectable field(s) for '%s'",
 				funcInjectName,
 				strings.Join(argsNames, ", "),
+				definition.fullName,
 			))
 	}
 
