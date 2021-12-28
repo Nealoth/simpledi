@@ -186,57 +186,14 @@ func (d *DefaultDiContainer) Init() {
 
 func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
 
-	errDef := "cannot register component"
+	errDef := "component registration error"
 
 	if !d.initialized {
 		panic(fmt.Sprintf("%s: container has not been initialized", errDef))
 	}
 
-	componentName := reflections.GetTypeFullName(cmp)
-
-	if !reflections.IsPointer(cmp) {
-		panic(fmt.Sprintf("%s: component '%s' should be registered as pointer", errDef, componentName))
-	}
-
-	injectableFields := reflections.GetTypeFieldsByTag(cmp, injectTagName)
-	componentDependencies := make([]string, 0, len(injectableFields))
-	injectorsMap := make(map[string]injectionFunc, 0)
-
-	for _, field := range injectableFields {
-
-		fieldTypeName := field.Type.String()
-
-		if !reflections.FieldIsPointer(field) {
-			fieldTypeName = "*" + fieldTypeName
-		}
-
-		injectionType, _ := field.Tag.Lookup(injectTagName)
-
-		injectorFunction, exist := injectValues[injectionType]
-
-		if !exist {
-			panic(fmt.Sprintf("%s: field '%s' of component '%s' has unknown injection type '%s'",
-				errDef,
-				field.Name+" "+field.Type.String(),
-				componentName,
-				injectionType))
-		}
-
-		injectorsMap[injectionType] = injectorFunction
-		componentDependencies = append(componentDependencies, fieldTypeName)
-	}
-
-	_, componentAlreadyExist := d.definitions[componentName]
-
-	if componentAlreadyExist {
-		panic(fmt.Sprintf("%s: component '%s' already exist", errDef, componentName))
-	}
-
-	d.definitions[componentName] = &componentDefinition{
-		fullName:     componentName,
-		rawComponent: cmp,
-		dependencies: componentDependencies,
-		injectors:    injectorsMap,
+	if _, err := d.definitions.register(cmp); err != nil {
+		panic(fmt.Sprintf(""))
 	}
 }
 
