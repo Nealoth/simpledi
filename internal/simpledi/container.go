@@ -163,7 +163,7 @@ func (d *DefaultDiContainer) afterContainerStart() {
 
 	// TODO log after container start
 	for _, comp := range d.components {
-		comp.AfterContainerStart()
+		comp.OnContainerReady()
 	}
 
 }
