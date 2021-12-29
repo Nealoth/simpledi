@@ -70,6 +70,7 @@ func (d definitionsContainer) register(cmp IComponent) (*componentDefinition, er
 
 func (d definitionsContainer) verify(verificators ...definitionsVerificatorFunc) error {
 	for _, verificator := range verificators {
+		// TODO add trace logging
 		if err := verificator(d); err != nil {
 			return err
 		}

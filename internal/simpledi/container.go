@@ -193,7 +193,7 @@ func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
 	}
 
 	if _, err := d.definitions.register(cmp); err != nil {
-		panic(fmt.Sprintf(""))
+		panic(fmt.Sprintf("%s: %s", errDef, err))
 	}
 }
 
