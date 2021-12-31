@@ -1,9 +1,9 @@
-package simpledi
+package internal
 
 import (
 	"errors"
 	"fmt"
-	"github.com/Nealoth/simpledi/pkg/simpledi/reflections"
+	"github.com/Nealoth/simpledi/internal/reflections"
 	"reflect"
 	"strings"
 )

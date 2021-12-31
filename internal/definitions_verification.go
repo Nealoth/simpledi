@@ -1,4 +1,4 @@
-package simpledi
+package internal
 
 import (
 	"errors"

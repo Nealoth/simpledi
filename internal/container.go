@@ -1,19 +1,13 @@
-package simpledi
+package internal
 
 import (
 	"fmt"
-	"github.com/Nealoth/simpledi/pkg/simpledi/reflections"
+	"github.com/Nealoth/simpledi"
+	"github.com/Nealoth/simpledi/internal/reflections"
 	"sort"
 )
 
-var _ IDiContainer = &DefaultDiContainer{}
-
-type IDiContainer interface {
-	Init()
-	RegisterComponent(cmp IComponent)
-	Start()
-	Destroy()
-}
+var _ simpledi.IDiContainer = &DefaultDiContainer{}
 
 type DefaultDiContainer struct {
 	initialized bool
@@ -97,8 +91,7 @@ func (d *DefaultDiContainer) Start() {
 
 				for injectorName, injectorFunc := range definition.injectors {
 
-					fieldsValues := reflections.
-						GetTypeFieldsValuesByTagValue(definition.rawComponent, injectTagName, injectorName)
+					fieldsValues := reflections.GetTypeFieldsValuesByTagValue(definition.rawComponent, injectTagName, injectorName)
 
 					if err := injectorFunc(definition, fieldsValues, d.components); err != nil {
 						panic(fmt.Sprintf(
@@ -168,7 +161,7 @@ func (d *DefaultDiContainer) Init() {
 	d.initialized = true
 }
 
-func (d *DefaultDiContainer) RegisterComponent(cmp IComponent) {
+func (d *DefaultDiContainer) RegisterComponent(cmp simpledi.IComponent) {
 
 	errDef := "component registration error"
 

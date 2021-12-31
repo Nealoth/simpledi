@@ -1,22 +1,23 @@
-package simpledi
+package internal
 
 import (
 	"errors"
 	"fmt"
-	"github.com/Nealoth/simpledi/pkg/simpledi/reflections"
+	"github.com/Nealoth/simpledi"
+	"github.com/Nealoth/simpledi/internal/reflections"
 )
 
 type componentDefinition struct {
 	fullName     string
 	initialized  bool
-	rawComponent IComponent
+	rawComponent simpledi.IComponent
 	dependencies []string
 	injectors    map[string]injectionFunc
 }
 
 type definitionsContainer map[string]*componentDefinition
 
-func (d definitionsContainer) register(cmp IComponent) (*componentDefinition, error) {
+func (d definitionsContainer) register(cmp simpledi.IComponent) (*componentDefinition, error) {
 	componentName := reflections.GetTypeFullName(cmp)
 
 	if !reflections.IsPointer(cmp) {
