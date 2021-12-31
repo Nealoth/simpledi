@@ -25,9 +25,9 @@ func fieldInject(_ *componentDefinition, fields []reflect.Value, components comp
 		}
 
 		if f.Kind() == reflect.Ptr {
-			f.Set(reflect.ValueOf(components[f.Type().String()]))
+			f.Set(reflect.ValueOf(components.GetRequired(f.Type().String())))
 		} else {
-			f.Set(reflect.ValueOf(components["*"+f.Type().String()]).Elem())
+			f.Set(reflect.ValueOf(components.GetRequired("*" + f.Type().String())).Elem())
 		}
 	}
 
@@ -95,21 +95,11 @@ func funcInject(definition *componentDefinition, fields []reflect.Value, compone
 
 	for _, argType := range funcArgsTypes {
 		if argType.Kind() == reflect.Ptr {
-			component, found := components[argType.String()]
-
-			if !found {
-				return errors.New(fmt.Sprintf("something went wrong. component '%s' has not found", argType.String()))
-			}
-
-			injectionArgs = append(injectionArgs, reflect.ValueOf(component))
+			injectionArgs = append(injectionArgs,
+				reflect.ValueOf(components.GetRequired(argType.String())))
 		} else {
-			component, found := components["*"+argType.String()]
-
-			if !found {
-				return errors.New(fmt.Sprintf("something went wrong. component '%s' has not found", argType.String()))
-			}
-
-			injectionArgs = append(injectionArgs, reflect.ValueOf(component).Elem())
+			injectionArgs = append(injectionArgs,
+				reflect.ValueOf(components.GetRequired("*"+argType.String())).Elem())
 		}
 	}
 

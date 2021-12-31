@@ -12,8 +12,6 @@ type IDiContainer interface {
 	Init()
 	RegisterComponent(cmp IComponent)
 	Start()
-	GetComponentByName(name string) (IComponent, bool)
-	GetComponent(component IComponent) (IComponent, bool)
 	Destroy()
 }
 
@@ -21,20 +19,6 @@ type DefaultDiContainer struct {
 	initialized bool
 	definitions definitionsContainer
 	components  componentsContainer
-}
-
-func (d *DefaultDiContainer) GetComponent(component IComponent) (IComponent, bool) {
-	return d.GetComponentByName(reflections.GetTypeFullName(component))
-}
-
-func (d *DefaultDiContainer) GetComponentByName(name string) (IComponent, bool) {
-	component, found := d.components[name]
-
-	if found {
-		return component, true
-	}
-
-	return nil, false
 }
 
 func (d *DefaultDiContainer) Start() {
@@ -133,7 +117,7 @@ func (d *DefaultDiContainer) Start() {
 				componentsInitialized++
 				componentsToInitLeft--
 				definition.initialized = true
-				d.components[definition.fullName] = definition.rawComponent
+				d.components.AddComponent(definition.fullName, definition.rawComponent)
 			}
 		}
 

@@ -19,14 +19,6 @@ func Register(cmp IComponent) int {
 	return 0
 }
 
-func GetComponentByName(name string) (IComponent, bool) {
-	return globalContainer.GetComponentByName(name)
-}
-
-func GetComponent(component IComponent) (IComponent, bool) {
-	return globalContainer.GetComponent(component)
-}
-
 func Start() {
 	globalContainer.Start()
 }
