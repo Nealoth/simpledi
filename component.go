@@ -23,10 +23,3 @@ func (c *Component) PostInit() {
 
 func (c *Component) OnDestroy() {
 }
-
-type IDiContainer interface {
-	Init()
-	RegisterComponent(cmp IComponent)
-	Start()
-	Destroy()
-}
