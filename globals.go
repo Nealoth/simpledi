@@ -1,13 +1,12 @@
-package global
+package simpledi
 
 import (
-	"github.com/Nealoth/simpledi"
 	"github.com/Nealoth/simpledi/internal"
 	"sync"
 )
 
 var containerInitMutex = sync.Once{}
-var globalContainer simpledi.IDiContainer
+var globalContainer IDiContainer
 
 func init() {
 	containerInitMutex.Do(func() {
@@ -16,7 +15,11 @@ func init() {
 	})
 }
 
-func Register(cmp simpledi.IComponent) int {
+func CreateContainer() IDiContainer {
+	return &internal.DefaultDiContainer{}
+}
+
+func Register(cmp IComponent) int {
 	globalContainer.RegisterComponent(cmp)
 	return 0
 }
