@@ -1,21 +1,20 @@
-package internal
+package simpledi
 
 import (
 	"fmt"
-	"github.com/Nealoth/simpledi"
 	"github.com/Nealoth/simpledi/internal/reflections"
 	"sort"
 )
 
-var _ simpledi.IDiContainer = &DefaultDiContainer{}
+var _ IDiContainer = &defaultDiContainer{}
 
-type DefaultDiContainer struct {
+type defaultDiContainer struct {
 	initialized bool
 	definitions definitionsContainer
 	components  componentsContainer
 }
 
-func (d *DefaultDiContainer) Start() {
+func (d *defaultDiContainer) Start() {
 
 	errDef := "cannot start DI container"
 
@@ -136,7 +135,7 @@ func (d *DefaultDiContainer) Start() {
 	d.afterContainerStart()
 }
 
-func (d *DefaultDiContainer) afterContainerStart() {
+func (d *defaultDiContainer) afterContainerStart() {
 
 	// TODO log after container start
 	for _, comp := range d.components {
@@ -145,7 +144,7 @@ func (d *DefaultDiContainer) afterContainerStart() {
 
 }
 
-func (d *DefaultDiContainer) purifyDefinitions() {
+func (d *defaultDiContainer) purifyDefinitions() {
 
 	for key, value := range d.definitions {
 		value.rawComponent = nil
@@ -155,13 +154,13 @@ func (d *DefaultDiContainer) purifyDefinitions() {
 	d.definitions = nil
 }
 
-func (d *DefaultDiContainer) Init() {
+func (d *defaultDiContainer) Init() {
 	d.definitions = make(definitionsContainer, 0)
 	d.components = make(componentsContainer, 0)
 	d.initialized = true
 }
 
-func (d *DefaultDiContainer) RegisterComponent(cmp simpledi.IComponent) {
+func (d *defaultDiContainer) RegisterComponent(cmp IComponent) {
 
 	errDef := "component registration error"
 
@@ -174,7 +173,7 @@ func (d *DefaultDiContainer) RegisterComponent(cmp simpledi.IComponent) {
 	}
 }
 
-func (d *DefaultDiContainer) Destroy() {
+func (d *defaultDiContainer) Destroy() {
 	for _, component := range d.components {
 		component.OnDestroy()
 	}

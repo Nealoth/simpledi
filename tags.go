@@ -1,4 +1,4 @@
-package internal
+package simpledi
 
 const (
 	injectTagName = "inject"
